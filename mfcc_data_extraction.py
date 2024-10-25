@@ -1,60 +1,56 @@
-from operator import index
 import os
-import librosa
+from operator import index
 import math
-import json
+import pandas as pd
+import numpy as np
+import librosa
+import librosa.display
+import warnings
 
-DATASET_PATH = "Data/genres_original"
-JSON_PATH = "data.json"
+folder_path = "./mfcc_npy/"
 sample_rate = 22050
 duration = 30  # mesaured in seconds
 samples_per_track = sample_rate * duration
 
-
-def extract_mfcc(dataset_path, json_path, n_mfcc=13, hop_length=512, n_fft=2048, num_segments=5):
-    # dictionary to store the data
-    data = {
-        "mapping": [],
-        "mfcc": [],
-        "labels": []
-    }
+def extract_mfcc_into_npy(n_mfcc, hop_length, num_segments, dataset_type, art):
+    alldata = read_dataset(dataset_type, art)
     num_samples_per_segment = int(samples_per_track / num_segments)
-    expected_num_mfcc_vectors_per_segment = math.ceil(
-        num_samples_per_segment / hop_length)
+    expected_num_mfcc_vectors_per_segment = math.ceil(num_samples_per_segment / hop_length)
+    
+    for meter, group in alldata.groupby(['meter']):
+        for index, song in group.iterrows():
+            path = os.path.relpath("./dataverse_files/" + song["filename"])
+            signal, sr = librosa.load(path, sr=sample_rate)
+            name = os.path.basename(song["filename"]).replace(".wav","")
+            for s in range(num_segments):
+                start_sample = num_samples_per_segment * s
+                finish_sample = start_sample + num_samples_per_segment
 
-    # loop through all the genres
-    for i, (dirpath, dirnames, filenames) in enumerate(os.walk(dataset_path)):
+                mfcc = librosa.feature.mfcc(y=signal[start_sample:finish_sample], n_mfcc=n_mfcc, sr=sr, hop_length=hop_length)
+                mfcc = mfcc.T
 
-        if dirpath is not dataset_path:
-            dirpath_components = dirpath.split("/")
-            semantic_label = dirpath_components[-1]
-            data["mapping"].append(semantic_label)
-            print("\nProcessing {}".format(semantic_label))
+                if len(mfcc) == expected_num_mfcc_vectors_per_segment:
+                    target_dir = os.path.join(folder_path, dataset_type, str(meter[0]))
+                    os.makedirs(target_dir, exist_ok=True)
+                    npy_filename = f"{name}-{s}.npy"
+                    np.save(os.path.join(target_dir, npy_filename), mfcc)
 
-            # looop through the audio files
-            for f in filenames:
-                file_path = os.path.join(dirpath, f)
-                signal, sr = librosa.load(file_path, sr=sample_rate)
+def read_dataset(dataset_type, art=False):
+    if art!=False and dataset_type == "train":
+        dataset_type=dataset_type+'_art'
+    file_name = f"./dataverse_files/data_{dataset_type}_4_classes.csv"
+    print(file_name)
+    return pd.read_csv(file_name)
 
-                # process mfcc for each window segment
-                for s in range(num_segments):
-                    start_sample = num_samples_per_segment * s
-                    finish_sample = start_sample + num_samples_per_segment
-
-                    mfcc = librosa.feature.mfcc(signal[start_sample:finish_sample],
-                                                sr=sr,
-                                                n_mfcc=n_mfcc,
-                                                hop_length=hop_length,
-                                                n_fft=n_fft)
-                    mfcc = mfcc.T
-                    if len(mfcc) == expected_num_mfcc_vectors_per_segment:
-                        data["mfcc"].append(mfcc.tolist())
-                        data["labels"].append(i-1)
-                        print("{}, segment:{}".format(file_path, s))
-
-    with open(json_path, "w") as fp:
-        json.dump(data, fp, indent=4)
-
+def main():
+    n_mfcc = 13
+    hop_length = 512
+    num_segments = 10
+    art = False
+    # For each dataset type
+    for dataset_type in ['train', 'val', 'test']:
+        print(f"Processing {dataset_type}")
+        extract_mfcc_into_npy(n_mfcc, hop_length, num_segments, dataset_type, art)
 
 if __name__ == "__main__":
-    extract_mfcc(DATASET_PATH, JSON_PATH, num_segments=10)
+    main()
