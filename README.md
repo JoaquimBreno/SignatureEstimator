@@ -23,17 +23,17 @@ If necessary, adjust the labels and mappings to fit your dataset in the load_dat
 Usage
 The project is divided into two main scripts:
 
-CNN_Training.py: This script is responsible for loading the data, training the CNN model, and evaluating its performance.
-MFCC_Extraction.py: Prior to training, this script extracts MFCC features from the audio dataset and saves them in a convenient format for the model.
+cnn_train.py: This script is responsible for loading the data, training the CNN model, and evaluating its performance.
+mfcc_extraction.py: Prior to training, this script extracts MFCC features from the audio dataset and saves them in a convenient format for the model.
 To use this project:
 
-Extract MFCC Features: Run MFCC_Extraction.py to process your dataset and extract MFCC features.
+Extract MFCC Features: Run mfcc_extraction.py to process your dataset and extract MFCC features.
 
 
-python MFCC_Extraction.py
-Train and Evaluate the CNN Model: After extracting features, run CNN_Training.py to train the model and evaluate its performance.
+python mfcc_extraction.py
+Train and Evaluate the CNN Model: After extracting features, run cnn_train.py to train the model and evaluate its performance.
 
 
-python CNN_Training.py
+python cnn_train.py
 Monitor training progress, view logs, and access model checkpoints using your Weights & Biases dashboard.
 
