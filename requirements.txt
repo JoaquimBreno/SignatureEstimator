@@ -1,0 +1,10 @@
+tensorflow==2.18.0
+numpy==2.0.2
+scikit-learn==1.5.2
+matplotlib==3.9.2
+seaborn==0.13.2
+librosa==0.10.2.post1
+pandas==2.2.3
+wandb==0.18.5
+tqdm==4.66.5
+inflect==7.4.0
