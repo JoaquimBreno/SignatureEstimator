@@ -1,0 +1,6 @@
+*.wav
+*.npy
+*.png
+data.json
+wandb
+models
